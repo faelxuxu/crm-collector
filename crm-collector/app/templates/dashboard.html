@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · CRM Collector{% endblock %}
+{% block content %}
+<section class="cards">
+  <div class="card stat">
+    <h3>Total de leads</h3>
+    <p class="big">{{ stats.total }}</p>
+  </div>
+  <div class="card stat stat-warn">
+    <h3>Sem site / problemático</h3>
+    <p class="big">{{ stats.no_site }}</p>
+  </div>
+  <div class="card stat stat-hot">
+    <h3>Alta intenção (score ≥ 70)</h3>
+    <p class="big">{{ stats.high_intent }}</p>
+  </div>
+  <div class="card stat">
+    <h3>Score médio</h3>
+    <p class="big">{{ stats.avg_score }}</p>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Distribuição por status</h2>
+  <div class="status-bar">
+    {% set s = stats.by_status %}
+    {% set total = stats.total or 1 %}
+    {% for st, label in [('novo','Novo'),('contato','Contato'),('proposta','Proposta'),('ganho','Ganho'),('perdido','Perdido'),('descartado','Descartado')] %}
+      {% set count = s.get(st, 0) %}
+      {% set pct = (count * 100 / total) | round(1) %}
+      <div class="status-cell status-{{ st }}" title="{{ label }}: {{ count }}">
+        <span class="status-num">{{ count }}</span>
+        <span class="status-label">{{ label }}</span>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="card">
+  <h2>Top cidades</h2>
+  <ul class="cities">
+    {% for c in stats.top_cities %}
+      <li><strong>{{ c.city }}</strong> — {{ c.c }} leads</li>
+    {% else %}
+      <li class="muted">Colete alguns leads primeiro.</li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="card">
+  <h2>Leads mais quentes</h2>
+  <table class="leads">
+    <thead>
+      <tr><th>Nome</th><th>Nicho</th><th>Cidade</th><th>Site</th><th>Score</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {% for l in leads %}
+        <tr>
+          <td><a href="{{ url_for('main.lead_detail', lead_id=l.id) }}">{{ l.business_name }}</a></td>
+          <td>{{ l.niche or '—' }}</td>
+          <td>{{ l.city or '—' }}</td>
+          <td>
+            {% if l.website %}
+              <a href="{{ l.website }}" target="_blank" rel="noopener">{{ l.website[:40] }}…</a>
+            {% else %}
+              <span class="badge bad">sem site</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="score score-{{ (l.website_score or 0) // 20 }}">{{ l.website_score or 0 }}</span>
+          </td>
+          <td><span class="status-pill status-{{ l.status }}">{{ l.status }}</span></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6" class="muted">Sem leads ainda. Vá em <a href="{{ url_for('main.scrape_view') }}">Coletar</a>.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{% if jobs %}
+<section class="card">
+  <h2>Últimas coletas</h2>
+  <ul class="jobs">
+    {% for j in jobs %}
+      <li>
+        <strong>#{{ j.id }}</strong> {{ j.niche }} em {{ j.city }} ·
+        <span class="status-pill status-{{ j.status }}">{{ j.status }}</span>
+        {% if j.status == 'done' %}
+          · {{ j.found }} encontrados, {{ j.inserted }} novos
+        {% endif %}
+        {% if j.error %}<div class="error">⚠️ {{ j.error }}</div>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Coletar leads · CRM Collector{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Coletar leads</h1>
+  <p class="muted">Busca empresas no Google Maps por <em>nicho + cidade</em>, audita o site, e salva tudo. Respeite o delay para não ser bloqueado.</p>
+  <form method="post" class="grid">
+    <label>Nicho*<input name="niche" required value="{{ default_niche }}" placeholder="restaurante, dentista, salão..."></label>
+    <label>Cidade*<input name="city" required value="{{ default_city }}" placeholder="São Paulo, Lisboa, ..."></label>
+    <label>País<input name="country" value="{{ default_country }}" maxlength="2"></label>
+    <label>Provedor
+      <select name="provider">
+        <option value="overpass" selected>OpenStreetMap (grátis, recomendado)</option>
+        <option value="google_maps">Google Maps (frágil, sem API key)</option>
+      </select>
+    </label>
+    <label>Máx. resultados<input type="number" name="max_results" value="15" min="1" max="60"></label>
+    <label>Delay entre checagens (s)<input type="number" step="0.5" name="delay" value="2.5" min="0"></label>
+    <label class="full row"><input type="checkbox" name="enrich_instagram" checked> Tentar descobrir Instagram automaticamente</label>
+    <div class="full"><button class="btn" type="submit">Iniciar coleta</button></div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Histórico de coletas</h2>
+  {% if jobs %}
+  <table class="leads">
+    <thead><tr><th>#</th><th>Nicho</th><th>Cidade</th><th>Status</th><th>Encontrados</th><th>Novos</th><th>Quando</th><th>Erro</th></tr></thead>
+    <tbody>
+      {% for j in jobs %}
+        <tr>
+          <td>{{ j.id }}</td>
+          <td>{{ j.niche }}</td>
+          <td>{{ j.city }}</td>
+          <td><span class="status-pill status-{{ j.status }}">{{ j.status }}</span></td>
+          <td>{{ j.found or 0 }}</td>
+          <td>{{ j.inserted or 0 }}</td>
+          <td>{{ j.created_at }} {% if j.finished_at %}→ {{ j.finished_at }}{% endif %}</td>
+          <td class="error">{{ j.error or '' }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="muted">Nenhuma coleta rodada ainda.</p>
+  {% endif %}
+</section>
+{% endblock %}

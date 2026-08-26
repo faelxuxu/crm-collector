@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}CRM Collector{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a href="{{ url_for('main.dashboard') }}">🛰️ CRM Collector</a>
+    </div>
+    <nav>
+      <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('main.leads_list') }}">Leads</a>
+      <a href="{{ url_for('main.pipeline_view') }}">Pipeline</a>
+      <a href="{{ url_for('main.scrape_view') }}">Coletar</a>
+      <a href="{{ url_for('main.import_csv') }}">Importar</a>
+      <a href="{{ url_for('main.export_csv') }}">Exportar</a>
+    </nav>
+  </header>
+
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+          {% for cat, msg in messages %}
+            <div class="flash flash-{{ cat }}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <small>CRM Collector · detecta quem precisa de um site, gera o lead e o copy de abordagem.</small>
+  </footer>
+</body>
+</html>

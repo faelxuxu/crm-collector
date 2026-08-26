@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Pipeline · CRM Collector{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Pipeline</h1>
+  <p class="muted">Arraste cards entre colunas para mudar o status (atualize a página depois — versão arrastável é incremental).</p>
+</section>
+
+<div class="kanban">
+  {% for status, label in [('novo','Novo'),('contato','Em contato'),('proposta','Proposta'),('ganho','Ganho'),('perdido','Perdido'),('descartado','Descartado')] %}
+    <div class="kanban-col">
+      <header><span class="status-pill status-{{ status }}">{{ label }}</span> <span class="muted small">{{ cols.get(status, []) | length }}</span></header>
+      {% for l in cols.get(status, []) %}
+        <a class="kanban-card" href="{{ url_for('main.lead_detail', lead_id=l.id) }}">
+          <strong>{{ l.business_name }}</strong>
+          <small class="muted">{{ l.niche or '' }} · {{ l.city or '' }}</small>
+          <span class="score score-{{ (l.website_score or 0) // 20 }}">{{ l.website_score or 0 }}</span>
+        </a>
+      {% else %}
+        <p class="muted small">vazio</p>
+      {% endfor %}
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

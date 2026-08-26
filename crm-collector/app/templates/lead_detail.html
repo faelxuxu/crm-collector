@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}{{ lead.business_name }} · CRM Collector{% endblock %}
+{% block content %}
+<section class="card lead-header">
+  <div>
+    <h1>{{ lead.business_name }}</h1>
+    <p class="muted">
+      {{ lead.niche or '—' }} · {{ lead.city or '—' }}{% if lead.state %}/{{ lead.state }}{% endif %} · {{ lead.country or '' }}
+    </p>
+  </div>
+  <div class="lead-actions">
+    <span class="score score-{{ (lead.website_score or 0) // 20 }}" title="Quanto maior, mais precisa de um site novo">
+      Score: {{ lead.website_score or 0 }}
+    </span>
+    <span class="status-pill status-{{ lead.status }}">{{ lead.status }}</span>
+    <form method="post" action="{{ url_for('main.recheck', lead_id=lead.id) }}">
+      <button class="btn btn-ghost" type="submit">🔄 Reauditar site</button>
+    </form>
+  </div>
+</section>
+
+{% if lead.pain_points_list %}
+<section class="card pains">
+  <h2>Por que este lead precisa de um site</h2>
+  <ul>
+    {% for p in lead.pain_points_list %}
+      <li>⚠️ {{ p }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="grid-2">
+  <div class="card">
+    <h2>Contato</h2>
+    <dl class="kv">
+      <dt>Site atual</dt>
+      <dd>
+        {% if lead.website %}
+          <a href="{{ lead.website }}" target="_blank" rel="noopener">{{ lead.website }}</a>
+        {% else %}
+          <span class="badge bad">Nenhum</span>
+        {% endif %}
+      </dd>
+      <dt>Status do site</dt>
+      <dd><span class="status-pill status-{{ lead.website_status or 'no_site' }}">{{ lead.website_status or 'desconhecido' }}</span></dd>
+      <dt>Telefone</dt><dd>{{ lead.phone or '—' }} {% if lead.phone %}<a class="chip" href="tel:{{ lead.phone }}">📞</a>{% endif %}</dd>
+      <dt>WhatsApp</dt>
+      <dd>
+        {% if lead.whatsapp %}
+          <a class="chip wa" href="https://wa.me/{{ lead.whatsapp | replace('+','') }}" target="_blank" rel="noopener">{{ lead.whatsapp }}</a>
+        {% else %}—{% endif %}
+      </dd>
+      <dt>Email</dt><dd>{{ lead.email or '—' }}</dd>
+      <dt>Instagram</dt><dd>{{ lead.instagram or '—' }}</dd>
+      <dt>Facebook</dt><dd>{{ lead.facebook or '—' }}</dd>
+      <dt>Endereço</dt><dd>{{ lead.address or '—' }}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2>Pipeline</h2>
+    <form method="post" action="{{ url_for('main.change_status', lead_id=lead.id) }}" class="row">
+      <select name="status">
+        {% for s in ['novo','contato','proposta','ganho','perdido','descartado'] %}
+          <option value="{{ s }}" {% if s == lead.status %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn" type="submit">Atualizar</button>
+    </form>
+    <p class="muted small">
+      Adicionado em {{ lead.created_at }} · Atualizado em {{ lead.updated_at }}
+      {% if lead.contacted_at %} · Primeiro contato em {{ lead.contacted_at }}{% endif %}
+    </p>
+    <form method="post" action="{{ url_for('main.delete_lead', lead_id=lead.id) }}" onsubmit="return confirm('Excluir este lead?');">
+      <button class="btn btn-danger" type="submit">Excluir lead</button>
+    </form>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Mensagens de abordagem prontas</h2>
+  <p class="muted">Personalize se quiser, copie e envie. Já vem com a "dor" detectada do site.</p>
+  <div class="messages">
+    {% for m in messages %}
+      <div class="message">
+        <div class="message-head">
+          <strong>{{ m.style }}</strong>
+          <button class="btn btn-ghost copy-btn" data-copy-target="msg-{{ loop.index }}">📋 Copiar</button>
+        </div>
+        <textarea id="msg-{{ loop.index }}" readonly>{{ m.text }}
+
+{{ m.signature }}</textarea>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="card" id="notes">
+  <h2>Notas & histórico</h2>
+  <form method="post" action="{{ url_for('main.add_note', lead_id=lead.id) }}">
+    <textarea name="body" rows="3" placeholder="Anotação: ligou, mandei msg, agendei reunião..." required></textarea>
+    <button class="btn" type="submit">Adicionar nota</button>
+  </form>
+  <ul class="timeline">
+    {% for it in interactions %}
+      <li>
+        <span class="dot"></span>
+        <div>
+          <small>{{ it.created_at }} · {{ it.kind }}</small>
+          <div>{{ it.body }}</div>
+        </div>
+      </li>
+    {% else %}
+      <li class="muted">Sem interações ainda.</li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="card">
+  <h2>Editar dados</h2>
+  <form method="post" action="{{ url_for('main.edit_lead', lead_id=lead.id) }}" class="grid">
+    <label>Nome<input name="business_name" value="{{ lead.business_name }}"></label>
+    <label>Nicho<input name="niche" value="{{ lead.niche or '' }}"></label>
+    <label>Telefone<input name="phone" value="{{ lead.phone or '' }}"></label>
+    <label>WhatsApp<input name="whatsapp" value="{{ lead.whatsapp or '' }}"></label>
+    <label>Email<input name="email" value="{{ lead.email or '' }}"></label>
+    <label>Instagram<input name="instagram" value="{{ lead.instagram or '' }}"></label>
+    <label>Site<input name="website" value="{{ lead.website or '' }}"></label>
+    <label>Cidade<input name="city" value="{{ lead.city or '' }}"></label>
+    <label>UF<input name="state" value="{{ lead.state or '' }}"></label>
+    <label class="full">Endereço<input name="address" value="{{ lead.address or '' }}"></label>
+    <label class="full">Notas<input name="notes" value="{{ lead.notes or '' }}"></label>
+    <div class="full"><button class="btn" type="submit">Salvar alterações</button></div>
+  </form>
+</section>
+{% endblock %}

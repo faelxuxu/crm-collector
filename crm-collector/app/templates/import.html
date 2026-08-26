@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Importar leads · CRM Collector{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Importar CSV</h1>
+  <p class="muted">Cabeçalhos sugeridos: <code>business_name, niche, address, city, state, country, phone, whatsapp, email, instagram, facebook, website, notes</code>. Linhas com <em>mesmo nome + cidade + país</em> serão atualizadas.</p>
+  <form method="post" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".csv" required>
+    <button class="btn" type="submit">Importar</button>
+  </form>
+</section>
+{% endblock %}
